@@ -1,11 +1,14 @@
-from services.worker_services import WorkerSurvices
+from services.worker_services import WorkerServices
 from fastapi_config import get_session, app
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session
 from schemas import WorkerCreate, WorkerResponse, WorkerSchedule, ScheduleCreate
 
-worker_service = WorkerSurvices()
+worker_service = WorkerServices()
 
+@app.get("/workers", response_model=list[WorkerResponse])
+def read_all_workers(session: Session = Depends(get_session)):
+    return worker_service.get_all_workers(session)
 
 @app.post("/worker/add", response_model=WorkerResponse)
 def fetch_add_worker(

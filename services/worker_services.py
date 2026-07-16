@@ -5,7 +5,12 @@ from helpers.config import save_new_worker
 from pydantic import ValidationError
 
 
-class WorkerSurvices:
+class WorkerServices:
+    
+    def get_all_workers(self, session: Session):
+        statement = select(Worker)
+        return session.exec(statement).all()
+    
     def get_worker(self, session: Session, id:int|None=None, name:str=""):
         if not id and not name:
             raise ValueError("ID or worker name is required")
