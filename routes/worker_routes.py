@@ -75,7 +75,22 @@ def fetch_fix_worker_schedule(
 @app.patch("/worker/update/{worker_id}")
 def fetch_update_worker_info(
     worker_id:int,
+    worker_data: WorkerCreate,
     session:Session = Depends(get_session)
 ):
-    pass
+    worker = worker_service.get_worker(session=session, id=worker_id)
+    if not worker:
+        raise HTTPException(status_code=400, detail=f"Worker {worker_id} does not exist")
     
+
+    if worker_data.pay > 50:
+        raise HTTPException(status_code=400, 
+                            detail=f"Worker pays does not seem suitable, please double check 'pay' field")
+    
+    worker.name = worker_data.name
+    worker.department = worker_data.department.value
+    
+    worker.pay = worker_data.pay
+    session.commit()
+    session.refresh(worker)
+    return worker
