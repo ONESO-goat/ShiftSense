@@ -1,0 +1,46 @@
+{
+    "example": {
+            "1": {
+            "name": "John Doe",
+            "department": "cashier",
+            "pay": 15,
+            "schedule": {
+                "monday": {
+                    "has_shift": true,
+                    "start_time": 9,
+                    "end_time": 17
+                },
+                "tuesday": {
+                    "has_shift": true,
+                    "start_time": 9,
+                    "end_time": 17
+                },
+                "wednesday": {
+                    "has_shift": true,
+                    "start_time": 9,
+                    "end_time": 17
+                },
+                "thursday": {
+                    "has_shift": true,
+                    "start_time": 9,
+                    "end_time": 17
+                },
+                "friday": {
+                    "has_shift": true,
+                    "start_time": 9,
+                    "end_time": 17
+                },
+                "saturday": {
+                    "has_shift": true,
+                    "start_time": 10,
+                    "end_time": 16
+                },
+                "sunday": {
+                    "has_shift": false
+                }
+            },
+            "hired_date": "2018-06-15",
+            "salary": 40000
+        }
+    }
+}
