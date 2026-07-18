@@ -18,4 +18,6 @@ async def lifespan(app: FastAPI):
 
 @app.get("/workers/shift-over")
 def fetch_ended_shift(session: Session = Depends(get_session)):
+    return time_manager.get_ended_shift()
+
     

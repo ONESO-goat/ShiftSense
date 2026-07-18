@@ -15,7 +15,7 @@ class Config:
     
     serpapi_api_key = os.getenv("google_search_api_key") or ''
 
-    worker_file = "database/workers.json"
+    worker_file = "data/workers.json"
     
     location = "boston"
     # Ollama config
