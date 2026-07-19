@@ -1,7 +1,7 @@
 from models import Worker
 from schemas import WorkerSchedule, DaySchedule
 from sqlmodel import Session, select
-from helpers.config import save_new_worker
+from datetime import datetime
 from pydantic import ValidationError
 
 
@@ -78,7 +78,21 @@ class WorkerServices:
 
             print(f"Day structure is not valid: {ex}")
             return None
-            
+    
+    def get_workers_working(self, session:Session)->list['Worker']:
+        workers = self.get_all_workers(session=session) 
+        
+        weekday = datetime.now().strftime("%A").lower()
+        
+        return [
+            worker for worker 
+            in workers 
+            if worker.schedule.get(weekday, "")
+            .get("is_off", "") 
+            is False
+                  ]
+    
+        
     def build_schedule(self, schedule:dict|WorkerSchedule)->WorkerSchedule|None:
         
         try:
@@ -107,6 +121,7 @@ class WorkerServices:
         session.add(object)
         session.commit()    # Saves it permanently
         session.refresh(object) 
-        
+    
+    
         
 

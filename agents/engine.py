@@ -38,12 +38,7 @@ class Engine:
 
     def _genrate(self, text:str, system_prompt:str, return_json:bool=False, _use_ollama:bool=False):
         """
-        
-        Returns:
-            dict: {{
-                "content": "AI response to the user here (strictly following the vocabulary and mimic rules)",
-                "logic": "AI logical guess on what words were heard and what they could mean (using ONLY words from the known word list to explain)"
-                }}
+
         """
         if not text or not system_prompt:
             return 

@@ -34,7 +34,7 @@ class TimeManager:
             if not day_schedule or day_schedule.is_off:
                 continue 
             
-            if day_schedule.end_shift == current_hour and worker.id not in self.ended_shift:
+            if day_schedule.shift_end == current_hour and worker.id not in self.ended_shift:
                 self.ended_shift[worker.id] = worker
 
     def get_ended_shift(self):

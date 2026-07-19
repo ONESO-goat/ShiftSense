@@ -19,6 +19,8 @@ class Weather:
 class Forecast:
     def __init__(self, current_day: int | None = None):
         self.current_day = current_day if current_day is not None else datetime.now().date().day
+        self.date = str(datetime.now().date())
+        
         self.holidays = holidays.US()
         self.local_events = []
         
@@ -109,5 +111,15 @@ class Forecast:
         self.holiday = ''
         return False, ''
     
+    @property
+    def current_date(self):
+        return datetime.now().date().isoformat()
+    
+    @property
+    def current_weekday(self):
+        return datetime.now().strftime("%A").lower()
+    
     def update_date(self):
         self.current_day = datetime.now().date().day
+        self.date = datetime.now().date().isoformat()
+        
