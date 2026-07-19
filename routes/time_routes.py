@@ -4,14 +4,16 @@ from fastapi_config import app, get_session
 from sqlmodel import Session
 import asyncio
 from fastapi import FastAPI, Depends, HTTPException
-from agents.timemanager import TimeManager
+from agents import timemanager, shiftmanager
+from services.store_services import StoreService
 
-time_manager = TimeManager()
+store_service = StoreService()
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(stora, session:Session=Depends(get_session)):
     # Start the background task when the server starts
-    loop_task = asyncio.create_task(time_manager.hourly_check_loop())
+
+    loop_task = asyncio.create_task(stora.time_manager.hourly_check_loop())
     yield
     # Clean up when the server stops
     loop_task.cancel()

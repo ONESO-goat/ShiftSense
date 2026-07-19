@@ -26,7 +26,7 @@ class Stora:
         if forecast is not None:
             self.forcast = forecast
         else:
-            self.forecast = Forecast(current_day=datetime.now().date().day)
+            self.forecast = Forecast(self.store)
 
         
     def review(self, workers:list):
@@ -120,16 +120,3 @@ class Stora:
         
         
     
-def run_agent_workflow(session: Session, store_id: str, user_message: str):
-    # 1. Grab the data from the DB
-    store = session.get(Store, store_id)
-    if not store:
-        raise ValueError("Store not found")
-        
-    # 2. Spin up your pure Python execution class with the fresh DB data
-    # (Assuming you pass your TimeManager context here)
-    agent_runner = Stora(store=store, timemanager=app_time_manager)
-    
-    # 3. Use your logic seamlessly
-    action = agent_runner.listen_to_user(user_message)
-    return action

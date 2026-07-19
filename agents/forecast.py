@@ -17,9 +17,9 @@ class Weather:
     SNOW = {"HARSH", "MILD", "LOW"}
     
 class Forecast:
-    def __init__(self, current_day: int | None = None):
-        self.current_day = current_day if current_day is not None else datetime.now().date().day
-        self.date = str(datetime.now().date())
+    def __init__(self, store):
+
+        self.store = store
         
         self.holidays = holidays.US()
         self.local_events = []
@@ -34,7 +34,7 @@ class Forecast:
         # Set up query parameters targeting specific locations
         results = client.search({
             "engine": "google_events",
-            "q": f"Events in {Config.location}", 
+            "q": f"Events in {self.store.location}", 
             "hl": "en",
             "gl": "us"
         })
@@ -57,6 +57,7 @@ class Forecast:
 
     def get_weather(self) -> dict | None:
         cfg = Config()
+        cfg.change_location(self.store.city)
     
         query_params = {
             'q': cfg.location,

@@ -6,19 +6,15 @@ import time
 from stora.helpers.config import Config
 from fastapi_config import get_session
 from  sqlmodel import Session
-if TYPE_CHECKING:
-    from engine import Engine
 
 worker_service = WorkerServices()
 
 
 class TimeManager:
-    def __init__(self,  
-                api_key:str|None=Config.gemini_api_key,
-                ai_to_use:str="ollama"):
-        
-        self.engine = Engine(api_key=api_key, ai_to_use=ai_to_use)
+    def __init__(self, store):
+        self.store = store
         self.ended_shift = {}
+        self._set_up_config_location()
         
     def check(self, session: Session):
         current_hour = (datetime.now().hour + 1) % 24
@@ -49,3 +45,6 @@ class TimeManager:
                 self.check(session)
             
             await asyncio.sleep(3600)
+            
+    def _set_up_config_location(self):
+        Config().change_location(new_location=self.store.city)
