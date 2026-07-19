@@ -7,8 +7,12 @@ from schemas import WorkerCreate, WorkerResponse, WorkerSchedule, ScheduleCreate
 worker_service = WorkerServices()
 
 @app.get("/workers", response_model=list[WorkerResponse])
-def read_all_workers(session: Session = Depends(get_session)):
+def fetch_all_workers(session: Session = Depends(get_session)):
     return worker_service.get_all_workers(session)
+
+@app.get("/workers/{worker_id}", response_model=list[WorkerResponse])
+def fetch_worker(worker_id, session: Session = Depends(get_session)):
+    return worker_service.get_worker(session=session, id=worker_id)
 
 @app.post("/worker/add", response_model=WorkerResponse)
 def fetch_add_worker(

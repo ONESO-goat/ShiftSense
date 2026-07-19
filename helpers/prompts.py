@@ -16,3 +16,9 @@ class Prompts:
     
     """
     
+    @property
+    def is_the_users_request_related_to_stora(self)->str:
+        return """
+    
+    """
+    

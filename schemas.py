@@ -73,8 +73,18 @@ class ScheduleCreate(BaseModel):
                                )
 class WorkerCreate(BaseModel):
     name: str = Field(min_length=2, max_length=50, examples=["Alice Smith"])
-    department: DepartmentEnum = Field(default=DepartmentEnum.OPS)
+    department: DepartmentEnum = Field(default=DepartmentEnum.CASHIER)
     pay: int = Field(ge=0, description="Hourly rate or salary, must be positive", examples=[25])
+    
+class StoreCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=50, examples=["Market Basket"])
+    city: str = Field(min_length=1, max_length=50, examples=["boston"])
+    address: DepartmentEnum = Field()
+    zip: int = Field( description="The zip of the location", examples=[66666])
+    
+class StoreLogin(BaseModel):
+    id: int =  Field(min_length=8, max_length=8, examples=[1000000000])
+    password: str =  Field()
 
 class WorkerSchedule(BaseModel):
     """Groups the entire week into a single validated container."""

@@ -1,8 +1,10 @@
 
 import random
-from typing import Dict, Any
-from sqlmodel import Column, SQLModel, Field, JSON, Session
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
+from sqlmodel import Column, SQLModel, Field, JSON, Session, Relationship
 from fastapi_config import get_session
+if TYPE_CHECKING:
+    from agents.shiftmanager import Stora
 
 # ================== ENUM OR HELPER =================
 
@@ -28,17 +30,31 @@ class Worker(SQLModel, table=True):
     department: str
     pay: int
     
+    store_id: Optional[str] = Field(default=None, foreign_key="store.id")
+    works_for: Optional["Store"] = Relationship(back_populates="workers")
+    
     schedule: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     
 class Store(SQLModel, table=True):
     id: str = Field(default=create_id, primary_key=True)
-    
+    password:str
     name: str
+    email:str
     address: str
     city: str
     zip: int
     
-    schedule: dict[str, tuple[int,int]|None] = Field(default_factory=dict, sa_column=Column(JSON))
+    workers: List[Worker] = Relationship(back_populates="works_for")
     
+    schedule: dict[str, tuple[int,int]|None] = Field(default_factory=dict, sa_column=Column(JSON))
+
+class StoreStora(SQLModel, table=True):
+    id: str = Field(default=create_id, primary_key=True)
+    
+    agent_settings: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    
+    store_id: Optional[str] = Field(default=None, foreign_key="store.id")
+    store: Optional[Store] = Relationship(back_populates="agent")
+
 # ==================================================
 

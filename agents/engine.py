@@ -36,7 +36,7 @@ class Engine:
                 print("  Run: ollama pull qwen3:0.6b")
                 
 
-    def _genrate(self, text:str, system_prompt:str, return_json:bool=False, _use_ollama:bool=False):
+    def _genrate(self, text:str, system_prompt:str, return_json:bool=False, _use_ollama:bool=False)->Any:
         """
 
         """
@@ -52,7 +52,7 @@ class Engine:
             "content": text,
             "logic": "",
             "error": True
-        }
+        } if return_json else ""
         if self.backend == 'gemini' and not _use_ollama:
             try:
                 from google.genai import types
@@ -73,8 +73,10 @@ class Engine:
                     )
                 )
                 
-                
-                return json.loads(response.text or '[]')
+                content = response.text 
+                if return_json:
+                    content = json.loads(response.text or '[]')
+                return content
             except Exception as e:
                 print(f"[engine.generate gemini] ⚠️ Gemini error: {e}")
                 if "429" in str(e):
@@ -101,7 +103,10 @@ class Engine:
                     format="json" if return_json else None,
                     options={'temperature': 0.2}
                 )
-                return json.loads(response['message']['content'])
+                content = response['message']['content']
+                if return_json:
+                    content = json.loads(response['message']['content'])
+                return content
                 
             except Exception as e:
                 print(f"⚠️ [engine.generate] Ollama error: {e}")
