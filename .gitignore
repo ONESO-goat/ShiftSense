@@ -19,6 +19,7 @@ venv/
 env/
 ENV/
 venv.bak/
+*.onnx
 env.bak/
 .idea/
 .vscode/

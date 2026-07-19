@@ -2,7 +2,7 @@ import bcrypt
 import string
 import secrets
 
-def validate_password(password:str):
+def validate_password(password:str)->tuple[bool, str]:
     if not password:
         return False, "Password is required"
     

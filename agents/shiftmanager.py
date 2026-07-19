@@ -2,6 +2,7 @@ from .engine import Engine
 from  helpers.prompts import Prompts
 from forecast import Forecast
 from datetime import datetime
+from services.store_services import StoreService
 from enum import Enum
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -9,9 +10,11 @@ if TYPE_CHECKING:
     from timemanager import TimeManager
 
 class StoraCalls(Enum):
+    NONE = ""
     REVIEW = "review"
     HOUR_CHECK = "hour_check"
     ENDED_SHIFTS = "ended_shift"
+    TAKING_A_BREAK = "break"
     
 
 class Stora:
@@ -28,12 +31,42 @@ class Stora:
         else:
             self.forecast = Forecast(self.store)
 
+    def run_action(self, session, action:str, workers:list|None=None):
+        if not action:
+            return None
+
+        actions = {
+            StoraCalls.REVIEW.value: self.review,
+            StoraCalls.ENDED_SHIFTS.value: self.timemanager.check,
+            StoraCalls.HOUR_CHECK.value: self.timemanager.check,
+            
+        }
+        if action not in actions:
+            return None
+        
+        if action == StoraCalls.REVIEW.value and workers is not None:
+            return actions[action](workers)
+        return actions[action](session)
+
         
     def review(self, workers:list):
+        """
+        Review staffing amount
+
+        Args:
+            workers (list): The workers working today
+
+        The agent return dict with status: ("overstaffed", "understaffed", or "sufficient") 
+        and reason: The reason behind its choice,
+            
+        Returns:
+            dict: dict with info including the;
+            content: Agent summary
+            error: An errors during the process
+            
+        """
         err = {
-            "status": "",
-            "reason": "",
-            "logic": "",
+            "content": "",
             "error": ""
         }
         txt = self._today_workers_data_to_string(workers)
@@ -49,7 +82,13 @@ class Stora:
             err['error'] += f"[TIER 5 ERROR] The agent returned no response inside `Stora.review()`: \n\t\u2022 {response}"
             return err
 
-        return response
+        if response['status'].lower().strip() == 'sufficient':
+            err['content'] = "At the moment, we are sufficient in the amount of workers"
+            return err
+        
+        err['content'] = "At the moment, we are sufficient in the amount of workers"
+        return err
+    
     
     def _is_request_relevant(self, user_text:str):
         response = self.engine._genrate(text=user_text, system_prompt=self._prompts.is_the_users_request_related_to_stora)
@@ -58,7 +97,7 @@ class Stora:
 
         return "true" in response.lower()
     
-    def listen_to_user(self, text):
+    def listen_to_user(self, text)->str:
         if not text:
             return ""
             
@@ -67,16 +106,16 @@ class Stora:
         
     
         if "review" in  text: # ex: "do a review", "review", "store, review" WRONG: "Can you do a review on the ended shift"
-            return StoraCalls.REVIEW
+            return StoraCalls.REVIEW.value
             
-        elif "hourly check" in text:
-            return StoraCalls.HOUR_CHECK
+        elif "hour check" in text:
+            return StoraCalls.HOUR_CHECK.value
         
         elif all(word in text for word in ['shift', 'end']):
-            return StoraCalls.ENDED_SHIFTS
+            return StoraCalls.ENDED_SHIFTS.value
         
         else:
-            return ""
+            return StoraCalls.NONE.value
         
     def give_recommendations(self):
         pass

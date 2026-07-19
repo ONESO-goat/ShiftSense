@@ -1,4 +1,5 @@
 from services.store_services import StoreService
+from services.connector import Connector
 from fastapi_config import get_session, app
 from fastapi import Depends, HTTPException
 from sqlmodel import Session
@@ -8,12 +9,7 @@ from schemas import StoreCreate
 
 store_service = StoreService()
 
-@app.get("/stora/make")
-def fetch_build_store(data:StoreCreate,session:Session=Depends(get_session)):
-    info = store_service.create_store(session=session, **data.model_dump())
-    if not info['created']:
-        raise HTTPException(status_code=500, detail=info['errors'])
-    return info['store']
+@app.post("/stora/run")
 
 @app.post("/stora/review")
 def fetch_store_review(session:Session=Depends(get_session)):

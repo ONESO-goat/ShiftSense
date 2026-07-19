@@ -1,4 +1,4 @@
-from models import Worker
+from models import Worker, Store
 from schemas import WorkerSchedule, DaySchedule
 from sqlmodel import Session, select
 from datetime import datetime
@@ -7,8 +7,16 @@ from pydantic import ValidationError
 
 class WorkerServices:
     
-    def get_all_workers(self, session: Session):
-        statement = select(Worker)
+    def get_all_workers(self, session: Session, store:'Store|None'=None):
+        
+        if store is not None:
+            if not session.get(Store, store.id):
+                raise ValueError("Store doesnt exist while getting all workers from there")
+            statement = select(Worker).where(Worker.store_id==store.id)
+            
+        else:
+            statement = select(Worker)
+            
         return session.exec(statement).all()
     
     def get_worker(self, session: Session, id:int|None=None, name:str=""):
@@ -79,8 +87,8 @@ class WorkerServices:
             print(f"Day structure is not valid: {ex}")
             return None
     
-    def get_workers_working(self, session:Session)->list['Worker']:
-        workers = self.get_all_workers(session=session) 
+    def get_workers_working(self, session:Session, store)->list['Worker']:
+        workers = self.get_all_workers(session=session,store=store) 
         
         weekday = datetime.now().strftime("%A").lower()
         
