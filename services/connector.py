@@ -8,21 +8,26 @@ if TYPE_CHECKING:
     from voicebox import listen, speak
     
 class Connector:
-
+    def __init__(self,
+                 store:Store,
+                 ) -> None:
+        self.store = store
+        self.timemanager = self._setup_and_edit_timemanager(self.store)
+        self.agent_runner = shiftmanager.Stora(store=self.store, timemanager=self.timemanager)
+        
     def respond(self,
-                store:Store,
+
                 user_text:str,
                 session:Session,
                 voicebox:"speak.Voice"):
-        if not user_text or not store:
+        if not user_text or not self.store:
             return ""
-        the_timemanager = self._setup_and_edit_timemanager(store)
-        agent_runner = shiftmanager.Stora(store=store, timemanager=the_timemanager)
-        action = agent_runner.listen_to_user(user_text)
+  
+        action = self.agent_runner.listen_to_user(user_text)
         if not action:
             return f"Sorry, I don't know what '{action}' is. I can do reviews, hourly checks, check for ended shifts, just give me the word!"
         
-        data = agent_runner.run_action(session=session,action=action, workers=WorkerServices().get_workers_working(session,store=store))
+        data = self.agent_runner.run_action(session=session,action=action, workers=WorkerServices().get_workers_working(session,store=self.store))
         if not data:
             return ""
         
@@ -60,6 +65,7 @@ class Connector:
                 att += 1
                 continue
             return action
+
 
     def _setup_and_edit_timemanager(self, store):
         return timemanager.TimeManager(store=store)

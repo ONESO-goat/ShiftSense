@@ -9,8 +9,11 @@ from schemas import StoreCreate
 
 store_service = StoreService()
 
-@app.post("/stora/run")
-
+@app.post("/stora/run/{store_id}")
+def fetch_interface_loop(store_id, session:Session=Depends(get_session)):
+    store = store_service.get_store(session,id=store_id)
+    if not 
+    link = Connector()
 @app.post("/stora/review")
 def fetch_store_review(session:Session=Depends(get_session)):
     review = store_service
