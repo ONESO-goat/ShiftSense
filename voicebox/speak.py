@@ -110,9 +110,9 @@ class Voice:
             [
                 "piper",
                 "--model",
-                "voicevox/audio/piper-voices/en_US-lessac-medium.onnx",
+                "voicebox/audio/piper-voices/en_US-lessac-medium.onnx",
                 "--config",
-                "voicevox/audio/piper-voices/en_US-lessac-medium.onnx.json",
+                "voicebox/audio/piper-voices/en_US-lessac-medium.onnx.json",
                 "--output_file",
                 piper_path,
             ],
