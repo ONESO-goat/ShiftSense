@@ -54,27 +54,52 @@ class StoreDays(BaseModel):
 # CLIENT INPUTS
 
 class ScheduleCreate(BaseModel):
-    schedule_list:list = Field(examples=[{
-        "monday": {
-            "shift_start": 8,
-            "shift_end": 16,
-            "is_off": False,
-            "reason": ""
-        },
-        "tuesday": {
-            "shift_start": 8,
-            "shift_end": 16,
-            "is_off": False,
-            "reason": ""
-        },
-        "wednesday": {
-            "shift_start": None,
-            "shift_end": None,
-            "is_off": True,
-            "reason": "medical"
-        },
-    }]
-                               )
+    schedule_list:list = Field(examples=[
+        {
+    "monday": {
+        "shift_start": 8,
+        "shift_end": 17,
+        "is_off": False,
+        "reason": ""
+    },
+    
+    "tuesday": {
+        "shift_start": 8,
+        "shift_end": 17,
+        "is_off": False,
+        "reason": ""
+    },
+    "wednsday": {
+        "shift_start": 8,
+        "shift_end": 17,
+        "is_off": False,
+        "reason": ""
+    },
+    "thursday": {
+        "shift_start": 8,
+        "shift_end": 17,
+        'is_off': False,
+        "reason": ""
+    },
+    "friday": {
+        "shift_start": 8,
+        "shift_end": 17,
+        "is_off": False,
+        "reason": ""
+    },
+    "saturday": {
+        "shift_start": 0,
+        "shift_end": 0,
+        "is_off": True,
+        "reason": "break"
+    },
+    "sunday": {
+        "shift_start": 0,
+        "shift_end": 0,
+        "is_off": True,
+        "reason": "break"
+    }
+    }])
     
     
 class WorkerUpdate(BaseModel):
@@ -94,14 +119,20 @@ class StoreCreate(BaseModel):
     address: str = Field(examples=["700 boston rd"])
     zip: int = Field( description="The zip of the location", examples=[66666])
     password:str =  Field(min_length=10, max_length=250, examples=["MyGoodPassword123"])
-    
+
+class StoreInfo(BaseModel):
+    name: str = Field(min_length=1, max_length=50, examples=["Market Basket"])
+    city: str = Field(min_length=1, max_length=50, examples=["boston"])
+    email: str = Field(examples=["marketbasket66666@gmail.com"])
+    address: str = Field(examples=["700 boston rd"])
+    zip: int = Field( description="The zip of the location", examples=[66666])
+
 class StoreLogin(BaseModel):
     id: int =  Field(examples=[1000000000])
     password: str =  Field(min_length=10, max_length=250, examples=["MyGoodPassword123"])
 
 class WorkerSchedule(BaseModel):
     """Groups the entire week into a single validated container."""
-    worker_id: int
     monday: DaySchedule
     tuesday: DaySchedule
     wednesday: DaySchedule

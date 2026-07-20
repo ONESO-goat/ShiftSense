@@ -5,7 +5,7 @@ from services.store_services import StoreService
 from fastapi_config import get_session, app
 from fastapi import Depends, HTTPException
 from sqlmodel import Session
-from schemas import StoreLogin, StoreCreate
+from schemas import StoreLogin, StoreCreate, StoreInfo
 
 store_service = StoreService()
 
@@ -28,11 +28,19 @@ def fetch_store_login(data:StoreLogin,session:Session=Depends(get_session)):
     return store
 
 
-@app.post("/stora/forgot/id")
-def fetch_store_id(data:StoreCreate,session:Session=Depends(get_session)):
-    store = store_service.get_store(session=session, **data.model_dump())
+@app.post("/stora/get/data")
+def fetch_store_id(data:StoreInfo,session:Session=Depends(get_session)):
+    store = store_service.get_store(session=session, id=None, **data.model_dump())
     if not store:
         raise HTTPException(status_code=400, detail="This store doesn't exist, please double check info")
+    
+    return store.id
+
+@app.get("/stora/forgot/id")
+def fetch_store_id(email:str,session:Session=Depends(get_session)):
+    store = store_service.get_store_by_email(session=session, email=email)
+    if not store:
+        raise HTTPException(status_code=400, detail=f"No store found with the email '{email}', please double check info")
     
     return store.id
 

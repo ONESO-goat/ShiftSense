@@ -16,7 +16,14 @@ class StoreService:
     def get_all_stores(self, session: Session):
         statement = select(Store)
         return session.exec(statement).all()
+    def get_store_by_email(self, session:Session, email:str):
+        if not email:
+            raise ValueError("ID or worker name is required")
+        statement = select(Store).where(Store.email == email)
+        return session.exec(statement).first()
     
+        
+        
     def get_store(self, 
                   session: Session, 
                   id:int|None=None, 

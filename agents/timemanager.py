@@ -36,16 +36,16 @@ class TimeManager:
                 continue
             
             day_schedule = worker_schedule.get(current_day)
-            if not day_schedule or day_schedule.is_off:
+            if not day_schedule or day_schedule.get('is_off', False) == True:
                 continue 
             
-            if day_schedule.shift_end == current_hour and worker.id not in self.ended_shift:
+            if day_schedule['shift_end'] == current_hour and worker.id not in self.ended_shift:
                 self.ended_shift[str(worker.id)] = worker.model_dump()
         
         if not self.ended_shift:
             return err
         
-        context = 'The current ended shift are' 
+        context = '' 
         for worker_id, worker_info in self.ended_shift.items():
             
             context += f"""

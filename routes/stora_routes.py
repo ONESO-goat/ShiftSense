@@ -59,10 +59,18 @@ def speaking_to_agent_loop(store:'Store|int', session:Session)->tuple[bool,Error
     
     except KeyboardInterrupt:
         return True, "Broken"
-        
+
+@app.get("/workers/shift-over/{store_id}")
+def fetch_ended_shift(store_id:int, session: Session = Depends(get_session)):
+    success, link = assign_link(store_id, session=session)
+    if not success or isinstance(link, ErrorString):
+        raise HTTPException(status_code=400, detail=link)
+    shifts = link.timemanager.check(session)
+    return shifts
+
 @app.post("/stora/talk/{store_id}")
 def fetch_talk_to_agent(store_id:int, session=Depends(get_session)):
-    success, link = assign_link(store_id, session=session)
+    success, link = assign_link(store=store_id, session=session)
     if not success or isinstance(link, ErrorString):
         raise HTTPException(status_code=400, detail=link)
     data = link.process(session=session)

@@ -20,8 +20,5 @@ async def lifespan(stora, session:Session=Depends(get_session)):
     # Clean up when the server stops
     loop_task.cancel()
 
-@app.get("/workers/shift-over")
-def fetch_ended_shift(session: Session = Depends(get_session)):
-    return time_manager.get_ended_shift()
 
     

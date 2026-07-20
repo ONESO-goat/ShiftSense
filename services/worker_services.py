@@ -1,8 +1,9 @@
 from models import Worker, Store
 from schemas import WorkerSchedule, DaySchedule
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from datetime import datetime
 from pydantic import ValidationError
+
 
 
 class WorkerServices:
@@ -38,18 +39,44 @@ class WorkerServices:
         statement = select(Worker).where(Worker.name == name, Worker.store_id == store.id)
         return session.exec(statement).first()
     
-    def assign_schedule(self, session: Session, payload: WorkerSchedule) -> Worker | None:
-      
-        worker = session.get(Worker, payload.worker_id)
+    def get_workers_by_name(self, session: Session, store:Store|int|None=None, name:str=""):
+        if isinstance(store, int):
+            store = session.get(Store, store) 
+
+        
+        if not name or store is None:
+            raise ValueError("Store and name are required")
+        
+        name = name.lower().strip()
+        
+        statement = select(Worker).where(
+    func.lower(func.trim(Worker.name)) == name.lower().strip(),
+    Worker.store_id == store.id
+)
+        return session.exec(statement).all()
+        
+    def assign_schedule(self, session: Session, worker_id:int, payload: WorkerSchedule) -> Worker | None:
+
+        worker = self.get_worker(session=session, id=worker_id)
         if not worker:
-            return None  
+            raise ValueError(f"Worker with id {worker_id} doesn't exist")
+        
+        sch = {}
+        for day, info in payload.model_dump().items():
+            try:
+                sch[day] = self._validate_schedule_structure(info)
+            except ValidationError as ex:
+                raise ValidationError(f"'{day}' faced an error: {ex}")
             
+        sch = self.build_schedule(sch)
+        if not sch:
+            raise ValidationError("Schedule doesnt follow the correct json structure")
         
-        schedule_data = payload.model_dump(exclude={"worker_id"})
+        worker.schedule = sch.model_dump()
         
-        worker.schedule = schedule_data
         
-        self.save_and_commit_data(session=session, object=worker)
+        session.commit()
+        
         return worker
 
 
@@ -65,15 +92,17 @@ class WorkerServices:
             if not store:
                 return None
             
-            name_taken = self.get_worker(session=session, name=name, store=store)
-            if name_taken is not None:
+            name_taken = self.get_workers_by_name(session=session, name=name, store=store)
+            num = 1
+            if name_taken:
                 print(f"The name '{name}' is already inside the known database for this store. Adding it with numbering")
-                name = f'{name} (2)'
+                num = len(name_taken) + 1
                 
             worker = Worker(
                 name=name,
                 department=department,
                 pay=pay,
+                same_name_id=num,
                 works_for=store,
                 schedule={}
             )
@@ -85,12 +114,12 @@ class WorkerServices:
             print(f"Error during work creation process: {ex}")
             return None
     
-    def remove_worker(self, session:Session, worker_id:int, store_id:int)->tuple[int, dict[str,str]]:
+    def remove_worker(self, session:Session, worker_id:int, store_id:int|None=None)->tuple[int, dict[str,str]]:
 
         if not worker_id:
-            return 400, {"error": "Worker id was not included"}
+            return 400, {"error": "Worker id and Store id are required"}
 
-        worker = self.get_worker(session=session, id=worker_id, store=store_id)
+        worker = self.get_worker(session=session, id=worker_id, store=None)
         if not worker:
     
             return 404,  {"error": f"Worker '{worker_id}' was not found"}

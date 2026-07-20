@@ -44,7 +44,7 @@ class Worker(SQLModel, table=True):
     name: str
     department: str
     pay: float
-    
+    same_name_id: int = Field(default=1)
     store_id: Optional[str] = Field(default=None, foreign_key="store.id")
     works_for: Optional["Store"] = Relationship(back_populates="workers")
     

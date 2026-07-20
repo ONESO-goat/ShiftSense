@@ -8,19 +8,20 @@ from schemas import WorkerCreate, WorkerResponse, WorkerSchedule, ScheduleCreate
 
 worker_service = WorkerServices()
 
-@app.get("/workers", response_model=list[WorkerResponse])
+@app.get("/workers")
 def fetch_all_workers(session: Session = Depends(get_session)):
     return worker_service.get_all_workers(session=session)
 
-@app.get("/workers/get/all/{store_id}", response_model=list[WorkerResponse])
-def fetch_all_workers_for_store(store_id, session: Session = Depends(get_session)):
+@app.get("/workers/get/all/{store_id}")
+def fetch_all_workers_for_store(store_id:int, session: Session = Depends(get_session)):
     return worker_service.get_all_workers(session=session, store=store_id)
 
-@app.get("/workers/get/{worker_id}", response_model=list[WorkerResponse])
+@app.get("/workers/get/{worker_id}")
 def fetch_worker(worker_id:int, session: Session = Depends(get_session)):
     worker = worker_service.get_worker(session=session, id=worker_id)
     if not worker:
         raise HTTPException(status_code=404, detail=f"Worker {worker_id} does not exist")
+    print(worker)
     return worker
 
 @app.post("/worker/add/{store_id}")#, response_model=WorkerResponse)
@@ -38,6 +39,9 @@ def fetch_add_worker(
             department=worker_data.department.value,
             pay=worker_data.pay
         )
+        if not new_worker:
+            raise HTTPException(status_code=500, detail="Worker was not created and returned None")
+        
         return new_worker
         
     except ValueError as e:
@@ -52,7 +56,7 @@ def fetch_remove_worker(
         code, mess = worker_service.remove_worker(session=session, worker_id=worker_id)
         if code != 200:
             raise HTTPException(status_code=code, detail=mess)
-        return {"message": mess}
+        return mess
     
     except Exception as ex:
         raise HTTPException(status_code=400, detail=str(ex))
@@ -68,25 +72,17 @@ def fetch_fix_worker_schedule(
     Logic: When the admin press 'save', everything gets saved
     """
     if not schedule or not worker_id:
-        raise HTTPException(status_code=400, detail="Schedule or worker_id are required")
+        raise HTTPException(status_code=400, detail="Schedule and worker_id are required")
 
-    if worker_id != schedule.worker_id:
-        raise HTTPException(
-                status_code=400, 
-                detail="URL worker_id does not match the payload worker_id"
-            )
-            
-    if not schedule.worker_id:
-            schedule.worker_id = worker_id
-            
-    updated_worker = worker_service.assign_schedule(session, schedule)
+
+    updated_worker = worker_service.assign_schedule(session=session, worker_id=worker_id, payload=schedule)
     if not updated_worker:
         raise HTTPException(
                 status_code=400, 
                 detail=f"Worker with ID {worker_id} not found"
             )
             
-    return {"message": "successfully updated user schedule"}
+    return updated_worker
 
     
     
@@ -104,7 +100,7 @@ def fetch_update_worker_info(
     name =  worker_data.name
     department = worker_data.department.value if worker_data.department else ""
 
-    if pay is not None and pay > 50:
+    if pay is not None and not 0 < pay < 150:
         raise HTTPException(status_code=400, 
                             detail=f"Worker pays does not seem suitable, please double check 'pay' field")
     
@@ -116,6 +112,7 @@ def fetch_update_worker_info(
     
     if pay is not None:
         worker.pay = int(pay)
+        
     session.commit()
     session.refresh(worker)
     return worker
