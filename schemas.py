@@ -71,6 +71,13 @@ class ScheduleCreate(BaseModel):
         },
     }]
                                )
+    
+    
+class WorkerUpdate(BaseModel):
+    name: str | None = None
+    department: DepartmentEnum | None = None
+    pay: float | None = None
+    
 class WorkerCreate(BaseModel):
     name: str = Field(min_length=2, max_length=50, examples=["Alice Smith"])
     department: DepartmentEnum = Field(default=DepartmentEnum.CASHIER)

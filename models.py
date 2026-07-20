@@ -35,6 +35,15 @@ class Worker(SQLModel, table=True):
     
     schedule: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     
+    
+class HistoryLog(SQLModel, table=True):
+    id: str = Field(default=create_id, primary_key=True)
+    
+    store_id: Optional[str] = Field(default=None, foreign_key="store.id")
+    store: Optional["Store"] = Relationship(back_populates="log")
+    
+    log: list[Dict[str, Any]] = Field(default_factory=list)
+    
 class Store(SQLModel, table=True):
     id: str = Field(default=create_id, primary_key=True)
     password:str
@@ -45,6 +54,7 @@ class Store(SQLModel, table=True):
     zip: int
     
     workers: List[Worker] = Relationship(back_populates="works_for")
+    log: Optional[HistoryLog] = Relationship(back_populates="store")
     
     schedule: dict[str, tuple[int,int]|None] = Field(default_factory=dict, sa_column=Column(JSON))
 
@@ -56,5 +66,8 @@ class StoreStora(SQLModel, table=True):
     store_id: Optional[str] = Field(default=None, foreign_key="store.id")
     store: Optional[Store] = Relationship(back_populates="agent")
 
+
+
+    
 # ==================================================
 

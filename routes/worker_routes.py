@@ -1,8 +1,10 @@
+# worker_service.py
+
 from services.worker_services import WorkerServices
 from fastapi_config import get_session, app
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session
-from schemas import WorkerCreate, WorkerResponse, WorkerSchedule, ScheduleCreate
+from schemas import WorkerCreate, WorkerResponse, WorkerSchedule, ScheduleCreate, WorkerUpdate
 
 worker_service = WorkerServices()
 
@@ -11,13 +13,16 @@ def fetch_all_workers(session: Session = Depends(get_session)):
     return worker_service.get_all_workers(session)
 
 @app.get("/workers/{worker_id}", response_model=list[WorkerResponse])
-def fetch_worker(worker_id, session: Session = Depends(get_session)):
-    return worker_service.get_worker(session=session, id=worker_id)
+def fetch_worker(worker_id:int, session: Session = Depends(get_session)):
+    worker = worker_service.get_worker(session=session, id=worker_id)
+    if not worker:
+        raise HTTPException(status_code=404, detail=f"Worker {worker_id} does not exist")
+    return worker
 
 @app.post("/worker/add", response_model=WorkerResponse)
 def fetch_add_worker(
-    worker_data: WorkerCreate,               # 1. FastAPI reads & validates JSON here
-    session: Session = Depends(get_session)  # 2. FastAPI injects the DB session here
+    worker_data: WorkerCreate,               
+    session: Session = Depends(get_session) 
 ):
     try:
       
@@ -82,7 +87,7 @@ def fetch_fix_worker_schedule(
 @app.patch("/worker/update/{worker_id}")
 def fetch_update_worker_info(
     worker_id:int,
-    worker_data: WorkerCreate,
+    worker_data: WorkerUpdate,
     session:Session = Depends(get_session)
 ):
     worker = worker_service.get_worker(session=session, id=worker_id)
