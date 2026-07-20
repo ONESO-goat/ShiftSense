@@ -7,11 +7,13 @@ from pydantic import ValidationError
 
 class WorkerServices:
     
-    def get_all_workers(self, session: Session, store:'Store|None'=None):
+    def get_all_workers(self, session: Session, store:'Store|int|None'=None):
         
         if store is not None:
-            if not session.get(Store, store.id):
-                raise ValueError("Store doesnt exist while getting all workers from there")
+            if isinstance(store, int):
+                store = session.get(Store, store)
+            if not store:
+                return None
             statement = select(Worker).where(Worker.store_id==store.id)
             
         else:
@@ -19,14 +21,21 @@ class WorkerServices:
             
         return session.exec(statement).all()
     
-    def get_worker(self, session: Session, id:int|None=None, name:str=""):
+    def get_worker(self, session: Session, store:Store|int|None=None, id:int|None=None, name:str=""):
+        if isinstance(store, int):
+            store = session.get(Store, store) 
+            
         if not id and not name:
             raise ValueError("ID or worker name is required")
+        
         
         if id:
             return session.get(Worker, id)
         
-        statement = select(Worker).where(Worker.name == name)
+        if store is None:
+            raise ValueError("Store is required")
+        
+        statement = select(Worker).where(Worker.name == name, Worker.store_id == store.id)
         return session.exec(statement).first()
     
     def assign_schedule(self, session: Session, payload: WorkerSchedule) -> Worker | None:
@@ -46,36 +55,48 @@ class WorkerServices:
 
     def create_worker(self, 
                       session: Session, 
+                      store_id:int,
                       name:str, 
                       department:str, 
-                      pay:int,
+                      pay:int|float,
                       schedule:WorkerSchedule|None=None):
-        
-        name_taken = self.get_worker(session=session, name=name)
-        if name_taken is not None:
-            print(f"The name '{name}' is already inside the known database. Adding it with numbering")
-            name = f'{name} (2)'
+        try:
+            store = session.get(Store, store_id)
+            if not store:
+                return None
             
-        worker = Worker(
-            name=name,
-            department=department,
-            pay=pay,
-            schedule={}
-        )
-        self.save_and_commit_data(session=session, object=worker)
-        return worker
+            name_taken = self.get_worker(session=session, name=name, store=store)
+            if name_taken is not None:
+                print(f"The name '{name}' is already inside the known database for this store. Adding it with numbering")
+                name = f'{name} (2)'
+                
+            worker = Worker(
+                name=name,
+                department=department,
+                pay=pay,
+                works_for=store,
+                schedule={}
+            )
+            session.add(worker)
+            session.commit()
+            return worker
+        except Exception as ex:
+            session.rollback()
+            print(f"Error during work creation process: {ex}")
+            return None
     
-    def remove_worker(self, session:Session, worker_id:int)->tuple[int, dict[str,str]]:
+    def remove_worker(self, session:Session, worker_id:int, store_id:int)->tuple[int, dict[str,str]]:
 
         if not worker_id:
             return 400, {"error": "Worker id was not included"}
 
-        worker = self.get_worker(session=session, id=worker_id)
+        worker = self.get_worker(session=session, id=worker_id, store=store_id)
         if not worker:
     
             return 404,  {"error": f"Worker '{worker_id}' was not found"}
         
         session.delete(worker)
+        session.commit()
         return 200, {"message": f"Worker '{worker_id}' was successfully removed"}
     
     def _validate_schedule_structure(self, info: dict) -> DaySchedule | None:

@@ -1,6 +1,6 @@
 from sqlmodel import Session
 import random
-from models import Store, StoreStora
+from models import Store
 from agents import shiftmanager, timemanager  # Your existing logic class
 from typing import TYPE_CHECKING
 from .worker_services import WorkerServices

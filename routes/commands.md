@@ -9,11 +9,15 @@
 curl -X POST http://localhost:8000/stora/login \
   -H "Content-Type: application/json" \
   -d '{
-    "id": 111111111,
-    "password": "mypassword"
+    "id": 3158418655,
+    "password": "MyGoodPassword123"
   }'
 
 ```
+
+## WORKS
+
+✅
 
 ---
 
@@ -21,11 +25,25 @@ curl -X POST http://localhost:8000/stora/login \
 
 > **Note:** FastAPI maps Pydantic models in `GET` requests to query parameters.
 
+
+
 ```bash
-curl -X GET "http://localhost:8000/stora/make?name=MyStore&location=MainSt" \
-  -H "Accept: application/json"
+curl -X POST http://localhost:8000/stora/make \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Market Basket",
+    "email": "marketbasket66666@gmail.com",
+    "city": "boston",
+    "address": "700 boston rd",
+    "zip": 66666,
+    "password": "MyGoodPassword123"
+  }'
 
 ```
+
+## WORKS
+
+✅
 
 ---
 
@@ -52,7 +70,7 @@ curl -X GET "http://localhost:8000/stora/forgot/password/1?new_password=newsecre
 ## @app.post("/stora/talk/{store_id}")
 
 ```bash
-curl -X POST http://localhost:8000/stora/talk/1 \
+curl -X POST http://localhost:8000/stora/talk/3158418655 \
   -H "Content-Type: application/json"
 
 ```
@@ -109,24 +127,32 @@ curl -X GET http://localhost:8000/workers \
 
 ---
 
-## @app.get("/workers/{worker_id}")
+## @app.get("/workers/get/{worker_id}")
 
 ```bash
 curl -X GET http://localhost:8000/workers/1 \
   -H "Accept: application/json"
 
 ```
-
 ---
 
-## @app.post("/worker/add")
+## @app.get("/workers/get/all/{store_id}")
 
 ```bash
-curl -X POST http://localhost:8000/worker/add \
+curl -X GET http://localhost:8000/workers/1 \
+  -H "Accept: application/json"
+
+```
+---
+
+## @app.post("/worker/add/{store_id}")
+
+```bash
+curl -X POST http://localhost:8000/worker/add/3158418655 \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Jane Doe",
-    "department": "Sales",
+    "department": "sales",
     "pay": 25.50
   }'
 

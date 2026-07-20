@@ -10,29 +10,35 @@ worker_service = WorkerServices()
 
 @app.get("/workers", response_model=list[WorkerResponse])
 def fetch_all_workers(session: Session = Depends(get_session)):
-    return worker_service.get_all_workers(session)
+    return worker_service.get_all_workers(session=session)
 
-@app.get("/workers/{worker_id}", response_model=list[WorkerResponse])
+@app.get("/workers/get/all/{store_id}", response_model=list[WorkerResponse])
+def fetch_all_workers_for_store(store_id, session: Session = Depends(get_session)):
+    return worker_service.get_all_workers(session=session, store=store_id)
+
+@app.get("/workers/get/{worker_id}", response_model=list[WorkerResponse])
 def fetch_worker(worker_id:int, session: Session = Depends(get_session)):
     worker = worker_service.get_worker(session=session, id=worker_id)
     if not worker:
         raise HTTPException(status_code=404, detail=f"Worker {worker_id} does not exist")
     return worker
 
-@app.post("/worker/add", response_model=WorkerResponse)
+@app.post("/worker/add/{store_id}")#, response_model=WorkerResponse)
 def fetch_add_worker(
+    store_id,
     worker_data: WorkerCreate,               
     session: Session = Depends(get_session) 
 ):
     try:
       
         new_worker = worker_service.create_worker(
+            store_id=store_id,
             session=session,
             name=worker_data.name,
             department=worker_data.department.value,
             pay=worker_data.pay
         )
-        return {"message": "Worker added successfully", "worker": new_worker}
+        return new_worker
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

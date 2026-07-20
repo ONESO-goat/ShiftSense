@@ -1,5 +1,9 @@
 import bcrypt
 import string
+from fastapi_config import get_session
+from sqlmodel import Session
+import random
+from typing import TYPE_CHECKING
 import secrets
 
 def validate_password(password:str)->tuple[bool, str]:
@@ -43,3 +47,4 @@ def verify_password(password:str, hashed_password_str:str):
 
     return bcrypt.checkpw(password_bytes, hashed_bytes)
       
+

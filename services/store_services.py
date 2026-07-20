@@ -17,7 +17,14 @@ class StoreService:
         statement = select(Store)
         return session.exec(statement).all()
     
-    def get_store(self, session: Session, id:int|None=None, name:str="", city:str="", address:str="",zip:int=0):
+    def get_store(self, 
+                  session: Session, 
+                  id:int|None=None, 
+                  name:str="", 
+                  city:str="", 
+                  address:str="",
+                  zip:int=0):
+        
         if not id and not name:
             raise ValueError("ID or worker name is required")
         
@@ -48,7 +55,7 @@ class StoreService:
     def create_store(self, 
                      session:Session, 
                      name:str, 
-                     store_email:str, 
+                     email:str, 
                      address:str, 
                      city:str, 
                      zip:int,
@@ -65,7 +72,7 @@ class StoreService:
             hashed_password = hash_password(password=password)
             store = Store(name=name, 
                           address=address,
-                          email=store_email,
+                          email=email,
                           city=city, 
                           zip=zip,
                           password=hashed_password)
@@ -87,7 +94,7 @@ class StoreService:
                 "errors": f"Error during store creation process: \n\t\u2022 {ex}"
             }
     
-    def validate_login(self, session:Session, store_id, password):
+    def validate_login(self, session:Session, store_id:int, password:str):
         store = self.get_store(session=session, id=store_id)
         
         if not store or not verify_password(password, store.password):

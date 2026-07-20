@@ -1,5 +1,8 @@
 from pydantic import BaseModel, Field
 from enum import Enum
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from models import Store
    
 class AbsenceReason(str, Enum):
     NONE = ""
@@ -18,11 +21,12 @@ class CloseReason(str, Enum):
 
 class DepartmentEnum(str, Enum):
     HR = "human resources"
+    CS = "customer survice"
     ENG = "engineering"
     CASHIER = "cashier"
-    CARTS = "cart push"
+    CARTS = "carts"
     MANAGER = "manager"
-    ASSI_MANAGER = "assistant manager"
+    ASSISTANT_MANAGER = "assistant manager"
     OPS = "operations"
     SALES = "sales"
     
@@ -81,17 +85,19 @@ class WorkerUpdate(BaseModel):
 class WorkerCreate(BaseModel):
     name: str = Field(min_length=2, max_length=50, examples=["Alice Smith"])
     department: DepartmentEnum = Field(default=DepartmentEnum.CASHIER)
-    pay: int = Field(ge=0, description="Hourly rate or salary, must be positive", examples=[25])
+    pay: float = Field(ge=0, description="Hourly rate or salary, must be positive", examples=[25])
     
 class StoreCreate(BaseModel):
     name: str = Field(min_length=1, max_length=50, examples=["Market Basket"])
     city: str = Field(min_length=1, max_length=50, examples=["boston"])
-    address: DepartmentEnum = Field()
+    email: str = Field(examples=["marketbasket66666@gmail.com"])
+    address: str = Field(examples=["700 boston rd"])
     zip: int = Field( description="The zip of the location", examples=[66666])
+    password:str =  Field(min_length=10, max_length=250, examples=["MyGoodPassword123"])
     
 class StoreLogin(BaseModel):
-    id: int =  Field(min_length=8, max_length=8, examples=[1000000000])
-    password: str =  Field()
+    id: int =  Field(examples=[1000000000])
+    password: str =  Field(min_length=10, max_length=250, examples=["MyGoodPassword123"])
 
 class WorkerSchedule(BaseModel):
     """Groups the entire week into a single validated container."""
@@ -121,7 +127,8 @@ class WorkerResponse(BaseModel):
     id: int  # Converted from the database auto-increment ID
     name: str
     department: DepartmentEnum
-    pay: int
+    pay: float
+  
     schedule: WorkerSchedule  # Fully parsed structured dictionary
 
     class Config:
