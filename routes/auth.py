@@ -29,7 +29,7 @@ def fetch_store_login(data:StoreLogin,session:Session=Depends(get_session)):
 
 
 @app.post("/stora/get/data")
-def fetch_store_id(data:StoreInfo,session:Session=Depends(get_session)):
+def fetch_store_data(data:StoreInfo,session:Session=Depends(get_session)):
     store = store_service.get_store(session=session, id=None, **data.model_dump())
     if not store:
         raise HTTPException(status_code=400, detail="This store doesn't exist, please double check info")

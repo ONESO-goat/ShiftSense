@@ -1,7 +1,5 @@
 from faster_whisper import WhisperModel
-import random
 import speech_recognition as sr
-from typing import TYPE_CHECKING
 
     
 
@@ -32,10 +30,12 @@ class Ears:
                             audio_stream = self.recognizer.listen(source, timeout=None, phrase_time_limit=3)
                             text_result = self.recognizer.recognize_google(audio_stream).lower()
 
-                            if wake_word in text_result:
+                            # Stora isnt detected because it's not a real word
+                            if any(word in text_result for word in [wake_word, "dora", "store"]):
                                 print(f"Wake word '{wake_word}' detected!")
                                 return True
-                        
+                            
+                            print(f"Heard the word '{text_result}'")
                         except sr.WaitTimeoutError:
                             continue
                         except sr.UnknownValueError:

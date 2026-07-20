@@ -110,7 +110,7 @@ curl -X GET http://localhost:8000/stora/8920501532 \
 
 ## @app.post("/stora/listen")
 
-```bash
+```bash 
 curl -X POST http://localhost:8000/stora/listen \
   -H "Content-Type: application/json"
 

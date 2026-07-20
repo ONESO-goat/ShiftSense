@@ -33,7 +33,7 @@ class Stora:
 
     def run_action(self, session, action:str, workers:list|None=None):
         if not action:
-            return None
+            return None, "Action is required"
 
         actions = {
             StoraCalls.REVIEW.value: self.review,
@@ -42,11 +42,11 @@ class Stora:
             
         }
         if action not in actions:
-            return None
+            return None, f"The action '{action}' is not in actions"
         
         if action == StoraCalls.REVIEW.value and workers is not None:
-            return actions[action](workers)
-        return actions[action](session)
+            return actions[action](workers), "success"
+        return actions[action](session), "success"
 
         
     def review(self, workers:list):
@@ -101,20 +101,25 @@ class Stora:
         if not text:
             return ""
             
-        if not self._is_request_relevant(text):
-            return "Sorry, I can't fulfill that request as I am designed to handle store flow."
+        # TODO
+        # if not self._is_request_relevant(text):
+        #     return "Sorry, I can't fulfill that request as I am designed to handle store flow."
         
     
         if "review" in  text: # ex: "do a review", "review", "store, review" WRONG: "Can you do a review on the ended shift"
+            print("REVIEW BEING EXCUTED")
             return StoraCalls.REVIEW.value
             
-        elif "hour check" in text:
+        elif "hour check" in text or "hourly check" in text:
+            print("HOURLY CHECK BEING EXCUTED")
             return StoraCalls.HOUR_CHECK.value
         
-        elif all(word in text for word in ['shift', 'end']):
+        elif "ended shifts" in text or "ended shit" in text or "end shift" in text or "ended shift" in text:
+            print("ENDED SHIFTS BEING EXCUTED")
             return StoraCalls.ENDED_SHIFTS.value
         
         else:
+            print("NOTHING IS BEING EXCUTED")
             return StoraCalls.NONE.value
         
     def give_recommendations(self):

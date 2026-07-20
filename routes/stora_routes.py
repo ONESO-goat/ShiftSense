@@ -2,7 +2,7 @@
 
 
 from services.store_services import StoreService
-from services.connector import Connector
+from services.connector import StoraSession
 from fastapi_config import get_session, app
 from voicebox import speak, listen
 from fastapi import Depends, HTTPException
@@ -18,7 +18,7 @@ store_service = StoreService()
 ErrorString = str
 
 
-def assign_link(store:'Store|int', session:Session)->tuple[bool,'ErrorString|Connector']:
+def assign_link(store:'Store|int', session:Session)->tuple[bool,'ErrorString|StoraSession']:
     try:
     
         if isinstance(store, int):
@@ -27,7 +27,7 @@ def assign_link(store:'Store|int', session:Session)->tuple[bool,'ErrorString|Con
         if not store:
             return False, "Store does not exist"
                 
-        link = Connector(store=store, ears=listen.Ears(), voicebox=speak.Voice())
+        link = StoraSession(store=store)
         if not link:
             return False, "Error occured during linking process"
         
@@ -46,7 +46,7 @@ def speaking_to_agent_loop(store:'Store|int', session:Session)->tuple[bool,Error
         if not store:
             return False, "Store does not exist"
                 
-        link = Connector(store=store, ears=listen.Ears(), voicebox=speak.Voice())
+        link = StoraSession(store=store)
         if not link:
             return False, "Error occured during linking process"
         

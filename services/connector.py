@@ -3,12 +3,13 @@ import random
 from models import Store
 from agents import shiftmanager, timemanager  # Your existing logic class
 from typing import TYPE_CHECKING
+import time
 from .worker_services import WorkerServices
 from voicebox import listen, speak
 
 ErrorOccuredBool = bool
 
-class Connector:
+class StoraSession:
     def __init__(self,
                  store:Store
                  ) -> None:
@@ -18,65 +19,103 @@ class Connector:
         self.agent_runner = shiftmanager.Stora(store=self.store, timemanager=self.timemanager)
         self.voicebox = speak.Voice()
         self.ears = listen.Ears()
+        self.is_talking:bool = False
         
     def process(self, session):
+        att:int = 0
         history = []
+        hold:bool = True
+        
         while True:
-            action = self.listen(session)
-            data = self.respond(user_text=action, session=session)
+            # if self.is_talking:
+            #     yield None
+            #     continue
+                
+            if att >= 3:
+                hold=True
+                att=0
+                
+            action = self.listen(session, hold=hold)
+            
+            if "die" in action or "shut down" in action:
+                break
+            
+            worked, data = self.respond(user_text=action, session=session)
+            if not worked:
+                print(f"DATA WAS NONE: \n\t\u2022 {data}")
+                hold = False
+                att += 1
+                continue
+            
             history.append(data)
-            continue
+            
+            hold = True
+            att = 0
+            
+        return history
         
     def respond(self,
 
                 user_text:str,
-                session:Session):
+                session:Session)->tuple[bool, str]:
+        
         if not user_text or not self.store:
-            return ""
+            return False, ""
   
         action = self.agent_runner.listen_to_user(user_text)
         if not action:
-            return f"Sorry, I don't know what '{action}' is. I can do reviews, hourly checks, check for ended shifts, just give me the word!"
+            self.is_talking = True
+            self.voicebox.say(f"Sorry, I don't know what '{user_text}' implies. I can do reviews, hourly checks, check for ended shifts, just give me the word!")
+            self.is_talking = False
+            return False, ""
         
-        data = self.agent_runner.run_action(session=session,
+        data, mes = self.agent_runner.run_action(session=session,
                                             action=action, 
                                             workers=WorkerServices()
                                             .get_workers_working(session,store=self.store))
         if not data:
-            return ""
+            return False, mes
         
-        speech_response = data['content']
-        self.voicebox.say(speech_response)
-        return data
+        speech_response = data.get('content')
+        if speech_response:
+            self.is_talking = True
+            self.voicebox.say(speech_response)
+            self.is_talking = False
+        
+        return True, data
     
-    def listen(self,     session: Session):
+    def listen(self, session: Session, hold:bool=True):
 
-        while True:
-            if self.ears.wait_for_wake_word():
-                break
+        if hold:
+            self.ears.wait_for_wake_word()
+
+            self.voicebox.say(random.choice(['yes?', 
+                                        "i'm all ears", 
+                                        'listening', 
+                                        'yours truly', 
+                                        "Yes human",
+                                        "what is it now"]))
         att = 0
-        self.voicebox.say(random.choice(['yes?', 
-                                    "i'm all ears", 
-                                    'listening', 
-                                    'yours truly', 
-                                    "Yes human",
-                                    "what is it now"]))
         while True:
             if att >= 3:
                 return ""
             
             action = self.ears.sr_listen()
             if not action:
-                self.voicebox.say(random.choice(["I didn't quite catch that, can you please repeat", 
-                                            "My apologies, I didnt catch that", 
-                                            "please repeat that",
-                                            "huh?"]))
+                self.voicebox.say(random.choice([
+                    "I didn't quite catch that, can you please repeat", 
+                    "My apologies, I didnt catch that", 
+                    "please repeat that",
+                    "huh?"]))
                 att += 1
                 continue
             return action
+        
     def greet(self):
         try:
+            self.is_talking = True
             self.voicebox.say(f"Hey, I am Stora. Your most helpful manager for {self.store.name}. I am delighted to work with all the great humans!")
+            self.is_talking = False
             return True
         except Exception as ex:
             print(f"ERROR DURING GREET: \n\t\u2022 {ex}")

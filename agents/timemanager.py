@@ -1,8 +1,7 @@
 import asyncio
 from services.worker_services import WorkerServices
 from typing import Any, TYPE_CHECKING
-from datetime import datetime
-import time
+from datetime import datetime, time
 from helpers.config import Config
 from fastapi_config import get_session
 from  sqlmodel import Session
@@ -39,7 +38,7 @@ class TimeManager:
             if not day_schedule or day_schedule.get('is_off', False) == True:
                 continue 
             
-            if day_schedule['shift_end'] == current_hour and worker.id not in self.ended_shift:
+            if day_schedule['shift_end'] <= current_hour and worker.id not in self.ended_shift:
                 self.ended_shift[str(worker.id)] = worker.model_dump()
         
         if not self.ended_shift:
@@ -47,10 +46,19 @@ class TimeManager:
         
         context = '' 
         for worker_id, worker_info in self.ended_shift.items():
+            worker_schedule = worker_info['schedule']
+            if not worker_schedule:
+                continue
             
+            hour = worker_schedule[current_day]['shift_end']
+            suffix = "pm" if hour >= 12 else "am"
+            display_hour = hour % 12
+            if display_hour == 0:
+                display_hour = 12
+                            
             context += f"""
             \n
-            {worker_info['name']}
+            {worker_info['name']} at {display_hour} {suffix}.
             
             """
         return {
