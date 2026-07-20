@@ -3,7 +3,7 @@ from services.worker_services import WorkerServices
 from typing import Any, TYPE_CHECKING
 from datetime import datetime
 import time
-from stora.helpers.config import Config
+from helpers.config import Config
 from fastapi_config import get_session
 from  sqlmodel import Session
 

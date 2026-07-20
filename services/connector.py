@@ -3,7 +3,7 @@ import random
 from models import Store, StoreStora
 from agents import shiftmanager, timemanager  # Your existing logic class
 from typing import TYPE_CHECKING
-from worker_services import WorkerServices
+from .worker_services import WorkerServices
 if TYPE_CHECKING:
     from voicebox import listen, speak
 
@@ -83,8 +83,14 @@ class Connector:
         workers = WorkerServices().get_workers_working(session, store=self.store)
         info = self.agent_runner.review(workers)
         if info['error'].strip() != "":
-            return False, info
-        return True, info
+            return True, info
+        return False, info
+    
+    def obtain_ended_shift(self, session:Session)->tuple[ErrorOccuredBool, dict]:
+        data = self.timemanager.check(session=session)
+        if data['error'].strip() != "":
+            return True, data
+        return False, data
     
     def _setup_and_edit_timemanager(self, store):
         return timemanager.TimeManager(store=store)

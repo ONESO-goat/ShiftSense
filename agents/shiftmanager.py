@@ -1,6 +1,6 @@
 from .engine import Engine
 from  helpers.prompts import Prompts
-from forecast import Forecast
+from .forecast import Forecast
 from datetime import datetime
 from services.store_services import StoreService
 from enum import Enum

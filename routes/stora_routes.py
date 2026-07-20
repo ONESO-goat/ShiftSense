@@ -22,7 +22,7 @@ def assign_link(store:'Store|int', session:Session)->tuple[bool,'ErrorString|Con
     try:
     
         if isinstance(store, int):
-            store = store_service.get_store(session,id=store)
+            store = store_service.get_store(session=session,id=store)
             
         if not store:
             return False, "Store does not exist"
@@ -41,7 +41,7 @@ def speaking_to_agent_loop(store:'Store|int', session:Session)->tuple[bool,Error
     try:
     
         if isinstance(store, int):
-            store = store_service.get_store(session,id=store)
+            store = store_service.get_store(session=session,id=store)
             
         if not store:
             return False, "Store does not exist"
@@ -77,9 +77,25 @@ def fetch_store_review(store_id:int, session:Session=Depends(get_session)):
     if not store:
         raise HTTPException(status_code=400, detail=f"Store with the id {store_id} does not exist")
     worked, link = assign_link(store=store,session=session)
-    if not worked:
+    if not worked or isinstance(link, ErrorString):
         raise HTTPException(status_code=400, detail=link)
+    
     error_occured, data = link.review(session=session)
+    if error_occured:
+        raise HTTPException(status_code=400, detail=data['error'])
+    return data
+
+
+@app.post("/stora/ended-shift/{store_id}")
+def fetch_store_ended_shift(store_id:int, session:Session=Depends(get_session)):
+    store = store_service.get_store(session=session, id=store_id)
+    if not store:
+        raise HTTPException(status_code=400, detail=f"Store with the id {store_id} does not exist")
+    worked, link = assign_link(store=store,session=session)
+    if not worked or isinstance(link, ErrorString):
+        raise HTTPException(status_code=400, detail=link)
+    
+    error_occured, data = link.obtain_ended_shift(session=session)
     if error_occured:
         raise HTTPException(status_code=400, detail=data['error'])
     return data
@@ -90,10 +106,6 @@ def fetch_store(store_id:int,session:Session=Depends(get_session)):
     store = store_service.get_store(session=session, id=store_id)
     if not store:
         raise HTTPException(status_code=403, detail=f"Store was not found with this id '{store_id}'")
+    
     return store
 
-
-@app.post("/stora/listen")
-def fetch_stora_listening(session:Session = Depends(get_session)):
-    """Stora listens for commands to run"""
-    pass

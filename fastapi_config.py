@@ -1,11 +1,12 @@
-
+# uvicorn main:app --reload
 import fastapi
 from sqlmodel import Session, create_engine
 
+app = fastapi.FastAPI(title="Stora API")
 
-engine = create_engine("sqlite:///database.db")
+DATABASE_URL = "sqlite:///./database.db"
+engine = create_engine(DATABASE_URL, echo=True)
 
-app = fastapi.FastAPI()
 
 def get_session():
     with Session(engine) as session:

@@ -94,15 +94,22 @@ def fetch_update_worker_info(
     if not worker:
         raise HTTPException(status_code=400, detail=f"Worker {worker_id} does not exist")
     
+    pay = worker_data.pay 
+    name =  worker_data.name
+    department = worker_data.department.value if worker_data.department else ""
 
-    if worker_data.pay > 50:
+    if pay is not None and pay > 50:
         raise HTTPException(status_code=400, 
                             detail=f"Worker pays does not seem suitable, please double check 'pay' field")
     
-    worker.name = worker_data.name
-    worker.department = worker_data.department.value
+    if name is not None:
+        worker.name = name
+        
+    if department is not None:
+        worker.department = department
     
-    worker.pay = worker_data.pay
+    if pay is not None:
+        worker.pay = int(pay)
     session.commit()
     session.refresh(worker)
     return worker

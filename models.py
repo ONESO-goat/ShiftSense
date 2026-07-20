@@ -42,7 +42,7 @@ class HistoryLog(SQLModel, table=True):
     store_id: Optional[str] = Field(default=None, foreign_key="store.id")
     store: Optional["Store"] = Relationship(back_populates="log")
     
-    log: list[Dict[str, Any]] = Field(default_factory=list)
+    log: list[Dict[str, Any]] = Field(default_factory=list, sa_type=JSON)
     
 class Store(SQLModel, table=True):
     id: str = Field(default=create_id, primary_key=True)
