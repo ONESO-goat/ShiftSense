@@ -97,10 +97,14 @@ curl -X POST http://localhost:8000/stora/review \
 ## @app.get("/stora/{store_id}")
 
 ```bash
-curl -X GET http://localhost:8000/stora/1 \
+curl -X GET http://localhost:8000/stora/8920501532 \
   -H "Accept: application/json"
 
 ```
+## WORKS
+
+✅
+
 
 ---
 

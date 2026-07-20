@@ -4,23 +4,20 @@ from models import Store
 from agents import shiftmanager, timemanager  # Your existing logic class
 from typing import TYPE_CHECKING
 from .worker_services import WorkerServices
-if TYPE_CHECKING:
-    from voicebox import listen, speak
+from voicebox import listen, speak
 
 ErrorOccuredBool = bool
 
 class Connector:
     def __init__(self,
-                 store:Store,
-                 ears:"listen.Ears",
-                 voicebox: "speak.Voice" 
+                 store:Store
                  ) -> None:
         
         self.store = store
         self.timemanager = self._setup_and_edit_timemanager(self.store)
         self.agent_runner = shiftmanager.Stora(store=self.store, timemanager=self.timemanager)
-        self.voicebox = voicebox
-        self.ears = ears
+        self.voicebox = speak.Voice()
+        self.ears = listen.Ears()
         
     def process(self, session):
         history = []
@@ -77,7 +74,13 @@ class Connector:
                 att += 1
                 continue
             return action
-
+    def greet(self):
+        try:
+            self.voicebox.say(f"Hey, I am Stora. Your most helpful manager for {self.store.name}. I am delighted to work with all the great humans!")
+            return True
+        except Exception as ex:
+            print(f"ERROR DURING GREET: \n\t\u2022 {ex}")
+            return False
     def review(self, session:Session)->tuple[ErrorOccuredBool,dict]:
   
         workers = WorkerServices().get_workers_working(session, store=self.store)

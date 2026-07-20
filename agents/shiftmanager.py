@@ -125,7 +125,7 @@ class Stora:
         self.forcast.update_date()
     
 
-    def _today_workers_data_to_string(self, workers_working_today:list['Worker']|None):
+    def _today_workers_data_to_string(self, workers_working_today:list|None):
         if not workers_working_today:
             return ""
         
@@ -153,7 +153,7 @@ class Stora:
         return result
             
         
-    
+   
     def change_store(self, new_store:'Store'):
         self.store = new_store
         
