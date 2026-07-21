@@ -21,8 +21,19 @@ class StoraSession:
         self.ears = listen.Ears()
         self.is_talking:bool = False
         self.is_busy: bool = False
-        
-    def process(self, session):
+    
+    def process_chat_by_texting(self, session, user_text:str, talk:bool=True)->str:
+        if not user_text:
+            return ""
+        worked, data = self.respond(user_text=user_text, session=session, talk=talk)
+        if not worked or isinstance(data, str):
+            print(f"DATA WAS NONE: \n\t\u2022 {data}")
+            return ""
+
+            
+        return data.get('content')
+    
+    def process(self, session, talk:bool=True):
         att:int = 0
         history = []
         hold:bool = True
@@ -44,7 +55,7 @@ class StoraSession:
                 self.voicebox.say("Stora, out!")
                 break
             
-            worked, data = self.respond(user_text=action, session=session)
+            worked, data = self.respond(user_text=action, session=session, talk=talk)
             if not worked:
                 print(f"DATA WAS NONE: \n\t\u2022 {data}")
                 hold = False
@@ -61,7 +72,8 @@ class StoraSession:
     def respond(self,
 
                 user_text:str,
-                session:Session)->tuple[bool, str]:
+                session:Session,
+                talk:bool)->tuple[bool, str]:
         
         if not user_text or not self.store:
             return False, ""
@@ -83,7 +95,7 @@ class StoraSession:
             return False, mes
         
         speech_response = data.get('content')
-        if speech_response:
+        if speech_response and talk and mes != "overview completed":
             self.is_talking = True
             self.voicebox.say(speech_response)
             self.is_talking = False

@@ -22,22 +22,30 @@ interface Entry {
 
 function ReviewsPage() {
   const { storeId } = useStoreId();
-  const activeStoreId = storeId;
-  if (activeStoreId == null) return null;
+
+  // 1. Declare ALL hooks first
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 2. Early returns go AFTER all hooks are declared
+  if (storeId == null) return null;
 
   async function generate() {
     setError(null);
     setLoading(true);
     try {
-      const res = await requestReview(activeStoreId!);
+      // TS safely knows storeId is string here due to the check above
+      const res = await requestReview(storeId); 
       const text =
         res.review ??
         res.message ??
         (typeof res === "string" ? res : JSON.stringify(res, null, 2));
-      setEntries((e) => [{ at: new Date().toLocaleString(), text }, ...e]);
+
+      setEntries((e) => [
+        { id: crypto.randomUUID(), at: new Date().toLocaleString(), text },
+        ...e,
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Review failed");
     } finally {

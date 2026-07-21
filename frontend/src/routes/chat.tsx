@@ -4,7 +4,7 @@ import { RequireAuth } from "@/components/AppShell";
 import { useStoreId } from "@/lib/auth";
 import { talkToStora } from "@/lib/stora-api";
 import { Button, Card } from "@/components/ui-bits";
-import { Send, Sparkles, User } from "lucide-react";
+import { Mic, Send, Sparkles, User } from "lucide-react";
 
 export const Route = createFileRoute("/chat")({
   component: () => (
@@ -21,9 +21,10 @@ interface Msg {
 }
 
 function ChatPage() {
+  // ✅ ALWAYS keep hooks at the very top level
   const { storeId } = useStoreId();
   const activeStoreId = storeId;
-  if (activeStoreId == null) return null;
+
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "stora",
@@ -34,18 +35,31 @@ function ChatPage() {
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  async function send() {
+  // Early returns go AFTER all hook declarations
+  if (activeStoreId == null) return null;
+
+  // Generic send function handling both text and voice requests
+  async function sendMessage(useVoice:boolean = false) {
     const text = draft.trim();
-    if (!text || pending) return;
-    setMessages((m) => [...m, { role: "user", text }]);
+
+    // Prevent sending empty requests unless voice mode allows empty triggers
+    if (!text && !useVoice) return;
+    if (pending) return;
+
+    const userMessageText = text || "🎤 [Voice Mode Activated]";
+
+    setMessages((m) => [...m, { role: "user", text: userMessageText }]);
     setDraft("");
     setPending(true);
+
     try {
-      const res = await talkToStora(activeStoreId!);
+      console.log(`Using voice: ${useVoice}`);
+      const res = await talkToStora(activeStoreId, Boolean(useVoice), text);
       const reply =
         res.response ??
         res.message ??
         (typeof res === "string" ? res : JSON.stringify(res, null, 2));
+
       setMessages((m) => [...m, { role: "stora", text: reply }]);
     } catch (err) {
       setMessages((m) => [
@@ -109,7 +123,7 @@ function ChatPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            send();
+            sendMessage(false);
           }}
           className="flex items-center gap-2 border-t border-border p-3"
         >
@@ -119,6 +133,19 @@ function ChatPage() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
           />
+
+          {/* Voice Mode Button */}
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending}
+            onClick={() => sendMessage(true)}
+            title="Talk using Voice Mode"
+          >
+            <Mic className="h-4 w-4" />
+          </Button>
+
+          {/* Text Send Button */}
           <Button type="submit" disabled={pending || !draft.trim()}>
             <Send className="h-4 w-4" />
             Send

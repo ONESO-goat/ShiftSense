@@ -53,35 +53,45 @@ function weatherLabel(code: number): { label: string; Icon: typeof Sun } {
 function Dashboard() {
   const { storeId } = useStoreId();
   const activeStoreId = storeId;
-  if (activeStoreId == null) return null;
 
+  // 1. All hooks defined FIRST
   const storeQ = useQuery({
     queryKey: ["store", activeStoreId],
-    queryFn: () => getStore(activeStoreId),
+    queryFn: () => getStore(activeStoreId!),
+    enabled: activeStoreId != null, // Only run query when activeStoreId exists
   });
+
   const workersQ = useQuery({
     queryKey: ["workers", activeStoreId],
-    queryFn: () => listStoreWorkers(activeStoreId),
+    queryFn: () => listStoreWorkers(activeStoreId!),
+    enabled: activeStoreId != null,
   });
+
   const shiftOverQ = useQuery({
     queryKey: ["shift-over", activeStoreId],
-    queryFn: () => shiftOver(activeStoreId),
+    queryFn: () => shiftOver(activeStoreId!),
+    enabled: activeStoreId != null,
   });
+
   const weatherQ = useQuery({
     queryKey: ["weather", storeQ.data?.city],
     queryFn: () => fetchWeather(String(storeQ.data?.city ?? "")),
-    enabled: !!storeQ.data?.city,
+    enabled: !!storeQ.data?.city && activeStoreId != null,
   });
+
+  const [insight, setInsight] = useState<string | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+
+  // 2. NOW you can safely check for missing storeId and early return!
+  if (activeStoreId == null) return null;
 
   const workers: Worker[] = Array.isArray(workersQ.data) ? workersQ.data : [];
   const shiftOverList: Worker[] = Array.isArray(shiftOverQ.data) ? shiftOverQ.data : [];
 
-  const [insight, setInsight] = useState<string | null>(null);
-  const [insightLoading, setInsightLoading] = useState(false);
   async function askStora() {
     setInsightLoading(true);
     try {
-      const res = await talkToStora(activeStoreId!);
+      const res = await talkToStora(activeStoreId!, false, "Give me a quick overview of how the store is doing.");
       setInsight(
         res.response ??
           res.message ??
@@ -98,7 +108,7 @@ function Dashboard() {
   const { label: wxLabel, Icon: WxIcon } = wx
     ? weatherLabel(wx.weathercode)
     : { label: "—", Icon: Cloud };
-
+    
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">

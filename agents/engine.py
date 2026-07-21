@@ -36,15 +36,15 @@ class Engine:
                 print("  Run: ollama pull qwen3:0.6b")
                 
 
-    def _genrate(self, text:str, system_prompt:str, return_json:bool=False, _use_ollama:bool=False)->Any:
+    def _genrate(self, text:str, system_prompt:str, return_json:bool=False, _use_ollama:bool=False, _ignore_text:bool=False)->Any:
         """
 
         """
-        if not text or not system_prompt:
+        if not text and not _ignore_text or not system_prompt:
             return 
         m = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"<<<DATA>>>\n{text}\n<<<DATA>>>"}
+            {"role": "user", "content": f"<<<DATA>>>\n{text}\n<<<DATA>>>" if text else ""}
         ]
         
         

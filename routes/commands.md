@@ -283,3 +283,62 @@ curl -X PATCH http://localhost:8000/worker/update/2333971677 \
 ## WORKS
 
 ✅
+
+
+const { storeId } = useStoreId();
+  const activeStoreId = storeId;
+
+  // 1. All hooks defined FIRST
+  const storeQ = useQuery({
+    queryKey: ["store", activeStoreId],
+    queryFn: () => getStore(activeStoreId!),
+    enabled: activeStoreId != null, // Only run query when activeStoreId exists
+  });
+
+  const workersQ = useQuery({
+    queryKey: ["workers", activeStoreId],
+    queryFn: () => listStoreWorkers(activeStoreId!),
+    enabled: activeStoreId != null,
+  });
+
+  const shiftOverQ = useQuery({
+    queryKey: ["shift-over", activeStoreId],
+    queryFn: () => shiftOver(activeStoreId!),
+    enabled: activeStoreId != null,
+  });
+
+  const weatherQ = useQuery({
+    queryKey: ["weather", storeQ.data?.city],
+    queryFn: () => fetchWeather(String(storeQ.data?.city ?? "")),
+    enabled: !!storeQ.data?.city && activeStoreId != null,
+  });
+
+  const [insight, setInsight] = useState<string | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+
+  // 2. NOW you can safely check for missing storeId and early return!
+  if (activeStoreId == null) return null;
+
+  const workers: Worker[] = Array.isArray(workersQ.data) ? workersQ.data : [];
+  const shiftOverList: Worker[] = Array.isArray(shiftOverQ.data) ? shiftOverQ.data : [];
+
+  async function askStora() {
+    setInsightLoading(true);
+    try {
+      const res = await talkToStora(activeStoreId!);
+      setInsight(
+        res.response ??
+          res.message ??
+          (typeof res === "string" ? res : JSON.stringify(res)),
+      );
+    } catch (err) {
+      setInsight(err instanceof Error ? err.message : "Stora is unavailable.");
+    } finally {
+      setInsightLoading(false);
+    }
+  }
+
+  const wx = weatherQ.data;
+  const { label: wxLabel, Icon: WxIcon } = wx
+    ? weatherLabel(wx.weathercode)
+    : { label: "—", Icon: Cloud };

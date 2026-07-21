@@ -19,23 +19,26 @@ export const Route = createFileRoute("/workers/")({
 function WorkersPage() {
   const { storeId } = useStoreId();
   const qc = useQueryClient();
-  if (storeId == null) return null;
 
+  // ✅ ALWAYS declare hooks at the top level
   const workersQ = useQuery({
     queryKey: ["workers", storeId],
-    queryFn: () => listStoreWorkers(storeId),
+    queryFn: () => listStoreWorkers(storeId!),
+    enabled: storeId != null, // Only fetch if storeId is available
   });
 
   const [form, setForm] = useState({ name: "", department: "", pay: "" });
   const [error, setError] = useState<string | null>(null);
 
   const addMut = useMutation({
-    mutationFn: () =>
-      addWorker(storeId, {
+    mutationFn: () => {
+      if (storeId == null) throw new Error("Store ID missing");
+      return addWorker(storeId, {
         name: form.name,
         department: form.department,
         pay: Number(form.pay),
-      }),
+      });
+    },
     onSuccess: () => {
       setForm({ name: "", department: "", pay: "" });
       qc.invalidateQueries({ queryKey: ["workers", storeId] });
@@ -47,6 +50,9 @@ function WorkersPage() {
     mutationFn: (id: number) => removeWorker(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["workers", storeId] }),
   });
+
+  // ✅ Early returns are safe here, below ALL hooks!
+  if (storeId == null) return null;
 
   const workers: Worker[] = Array.isArray(workersQ.data) ? workersQ.data : [];
 

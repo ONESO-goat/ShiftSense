@@ -3,7 +3,7 @@ from schemas import WorkerSchedule, DaySchedule
 from sqlmodel import Session, select, func
 from datetime import datetime
 from pydantic import ValidationError
-
+import traceback
 
 
 class WorkerServices:
@@ -138,17 +138,23 @@ class WorkerServices:
             return None
     
     def get_workers_working(self, session:Session, store)->list['Worker']:
-        workers = self.get_all_workers(session=session,store=store) 
-        
-        weekday = datetime.now().strftime("%A").lower()
-        
-        return [
-            worker for worker 
-            in workers 
-            if worker.schedule.get(weekday, "")
-            .get("is_off", "") 
-            is False
-                  ]
+        try:
+            workers = self.get_all_workers(session=session,store=store) 
+            
+            weekday = datetime.now().strftime("%A").lower()
+            
+            return [
+                worker for worker 
+                in workers 
+                if worker.schedule.get(weekday, "")
+                and 
+                worker.schedule.get(weekday, "").get("is_off", "") 
+                is False
+                    ]
+        except Exception as ex:
+            print(f"ERROR DURING GETTING WORKERS WORKING: {ex}")
+            print(traceback.print_exc())
+            return []
     
         
     def build_schedule(self, schedule:dict|WorkerSchedule)->WorkerSchedule|None:

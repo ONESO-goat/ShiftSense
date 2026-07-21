@@ -2,6 +2,7 @@
 
 
 from services.store_services import StoreService
+from pydantic import BaseModel
 from services.connector import StoraSession
 from services.connector_gemini import GeminiStoraSession
 import asyncio
@@ -17,7 +18,9 @@ if TYPE_CHECKING:
 store_service = StoreService()
 
 ErrorString = str
-
+class UserInput(BaseModel):
+    user_text: str
+    use_voice: bool
 
 def assign_link(store:'Store|int', session:Session, version:str="normal")->tuple[bool,'ErrorString|Any']:
     try:
@@ -72,13 +75,19 @@ def fetch_ended_shift(store_id:int, session: Session = Depends(get_session)):
     return shifts
 
 @app.post("/stora/talk/{store_id}")
-def old_fetch_talk_to_agent(store_id:int, session=Depends(get_session)):
+def old_fetch_talk_to_agent(store_id:int, payload:UserInput, session=Depends(get_session)):
+      
     success, link = assign_link(store=store_id, session=session)
     if not success or isinstance(link, ErrorString):
         raise HTTPException(status_code=400, detail=link)
-    
-    link.greet()
-    data = link.process(session=session)
+        
+    if payload.use_voice:
+        link.greet()
+        data = link.process(session=session)
+    else:
+        if not payload.user_text or len(payload.user_text.lower().strip()) == 0:
+            return ""
+        data = link.process_chat_by_texting(session=session, user_text=payload.user_text)
     return data
     
 @app.websocket("/stora/talk/ws/{store_id}")

@@ -108,10 +108,10 @@ export const resetPassword = (storeId: number, newPassword: string) =>
 // ---------- Store ----------
 export const getStore = (storeId: number) => request<Store>(`/stora/${storeId}`);
 
-export const talkToStora = (storeId: number) =>
+export const talkToStora = (storeId: number, use_voice:boolean, user_text:string) =>
   request<{ response?: string; message?: string } & Record<string, unknown>>(
     `/stora/talk/${storeId}`,
-    { method: "POST", headers: { "Content-Type": "application/json" } },
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ use_voice, user_text}) },
   );
 
 export const requestReview = (storeId: number) =>

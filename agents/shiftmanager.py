@@ -14,6 +14,7 @@ class StoraCalls(Enum):
     REVIEW = "review"
     HOUR_CHECK = "hour_check"
     ENDED_SHIFTS = "ended_shift"
+    OVERVIEW = "overview"
     TAKING_A_BREAK = "break"
     
 
@@ -39,16 +40,41 @@ class Stora:
             StoraCalls.REVIEW.value: self.review,
             StoraCalls.ENDED_SHIFTS.value: self.timemanager.check,
             StoraCalls.HOUR_CHECK.value: self.timemanager.check,
-            
+            StoraCalls.OVERVIEW.value: self.overview
         }
         if action not in actions:
             return None, f"The action '{action}' is not in actions"
         
         if action == StoraCalls.REVIEW.value and workers is not None:
-            return actions[action](workers), "success"
-        return actions[action](session), "success"
+            return actions[action](workers), "reviewed"
+        return actions[action](session), f"{action} completed"
 
+    def overview(self, session):
+        err = {
+            "content": "",
+            "error": ""
+        }
+        today_is_a_holiday, holiday = self.forecast.is_holiday()
+        events = self.forecast.get_local_events()
+        if not today_is_a_holiday:
+            holiday = "There is no holiday today."
         
+        response = self.engine._genrate(text="",
+                                        system_prompt=self._prompts.overview_prompt(store_name=self.store.name, 
+                                                                                    city=self.store.city, 
+                                                                                    weather=self.forecast.weather, 
+                                                                                    holiday=holiday, 
+                                                                                    events=events),
+                                        return_json=False,
+                                        _ignore_text=True)
+        
+        if not response:
+            err['error'] += f"[TIER 5 ERROR] The agent returned no response inside `Stora.overview()`: \n\t\u2022 {response}"
+            print(err['error'])
+            return err
+        
+        return {"content": response, "error": ""}
+    
     def review(self, workers:list):
         """
         Review staffing amount
@@ -115,7 +141,11 @@ class Stora:
         if "review" in  text: # ex: "do a review", "review", "store, review" WRONG: "Can you do a review on the ended shift"
             print("REVIEW BEING EXCUTED")
             return StoraCalls.REVIEW.value
-            
+        
+        elif text.lower() == "give me a quick overview of how the store is doing." or "overview" in text or "how is the store doing" in text:
+            print("OVERVIEW BEING EXCUTED")
+            return StoraCalls.OVERVIEW.value
+        
         elif "hour check" in text or "hourly check" in text:
             print("HOURLY CHECK BEING EXCUTED")
             return StoraCalls.HOUR_CHECK.value
