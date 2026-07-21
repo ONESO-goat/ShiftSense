@@ -88,13 +88,17 @@ curl -X POST http://localhost:8000/stora/talk/8920501532 \
 
 ---
 
-## @app.post("/stora/review")
+## @app.post("/stora/review/{store_id}")
 
 ```bash
-curl -X POST http://localhost:8000/stora/review \
+curl -X POST http://localhost:8000/stora/review/8920501532 \
   -H "Content-Type: application/json"
 
 ```
+
+## WORKS
+
+✅
 
 ---
 
@@ -110,15 +114,6 @@ curl -X GET http://localhost:8000/stora/8920501532 \
 ✅
 
 
----
-
-## @app.post("/stora/listen")
-
-```bash 
-curl -X POST http://localhost:8000/stora/listen \
-  -H "Content-Type: application/json"
-
-```
 
 ---
 

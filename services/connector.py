@@ -20,6 +20,7 @@ class StoraSession:
         self.voicebox = speak.Voice()
         self.ears = listen.Ears()
         self.is_talking:bool = False
+        self.is_busy: bool = False
         
     def process(self, session):
         att:int = 0
@@ -125,12 +126,14 @@ class StoraSession:
         except Exception as ex:
             print(f"ERROR DURING GREET: \n\t\u2022 {ex}")
             return False
+        
     def review(self, session:Session)->tuple[ErrorOccuredBool,dict]:
-  
+        self.is_busy = True
         workers = WorkerServices().get_workers_working(session, store=self.store)
         info = self.agent_runner.review(workers)
         if info['error'].strip() != "":
             return True, info
+        self.is_busy = False
         return False, info
     
     def obtain_ended_shift(self, session:Session)->tuple[ErrorOccuredBool, dict]:
