@@ -30,14 +30,17 @@ class StoraSession:
             # if self.is_talking:
             #     yield None
             #     continue
+            time.sleep(0.1)
                 
             if att >= 3:
                 hold=True
                 att=0
-                
+            
             action = self.listen(session, hold=hold)
             
+            # Check for exit commands immediately
             if "die" in action or "shut down" in action:
+                self.voicebox.say("Stora, out!")
                 break
             
             worked, data = self.respond(user_text=action, session=session)
@@ -69,10 +72,12 @@ class StoraSession:
             self.is_talking = False
             return False, ""
         
-        data, mes = self.agent_runner.run_action(session=session,
-                                            action=action, 
-                                            workers=WorkerServices()
-                                            .get_workers_working(session,store=self.store))
+        data, mes = self.agent_runner.run_action(
+            session=session,
+            action=action, 
+            workers=WorkerServices()
+            .get_workers_working(session,store=self.store))
+        
         if not data:
             return False, mes
         

@@ -27,7 +27,7 @@ class Stora:
         self.timemanager:'TimeManager' = timemanager
         self._prompts: 'Prompts' = Prompts()
         if forecast is not None:
-            self.forcast = forecast
+            self.forecast = forecast
         else:
             self.forecast = Forecast(self.store)
 
@@ -60,7 +60,7 @@ class Stora:
         and reason: The reason behind its choice,
             
         Returns:
-            dict: dict with info including the;
+            A dict with info including the;
             content: Agent summary
             error: An errors during the process
             
@@ -74,8 +74,14 @@ class Stora:
             err['error'] += f"[TIER 1 ERROR] The _today_workers_data_to_string returned nothing inside `Stora.review()`: \n\t\u2022 {txt}"
             return err
         
+
+        today_is_a_holiday, holiday = self.forecast.is_holiday()
+        events = self.forecast.get_local_events()
+        if not today_is_a_holiday:
+            holiday = "There is no holiday today."
+            
         response = self.engine._genrate(text=txt, 
-                                        system_prompt=self._prompts.agent_purpose,
+                                        system_prompt=self._prompts.agent_purpose(holiday=holiday, events=events),
                                         return_json=True)
         
         if not response:
@@ -86,7 +92,7 @@ class Stora:
             err['content'] = "At the moment, we are sufficient in the amount of workers"
             return err
         
-        err['content'] = "At the moment, we are sufficient in the amount of workers"
+        err['content'] = f"At the moment, we are {response['status']} in the amount of workers. {response['reason']}"
         return err
     
     
@@ -127,7 +133,7 @@ class Stora:
     
     
     def update_date(self):
-        self.forcast.update_date()
+        self.forecast.update_date()
     
 
     def _today_workers_data_to_string(self, workers_working_today:list|None):
@@ -138,7 +144,7 @@ class Stora:
         
         for idx, worker in enumerate(workers_working_today):
             workers_schedule = worker.schedule
-            current_day = workers_schedule.get(self.forcast.current_weekday, "")
+            current_day = workers_schedule.get(self.forecast.current_weekday, "")
             
             result += f"""
             ================= WORKER {idx} =================

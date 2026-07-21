@@ -77,10 +77,14 @@ curl -X GET "http://localhost:8000/stora/forgot/password/8920501532?new_password
 ## @app.post("/stora/talk/{store_id}")
 
 ```bash
-curl -X POST http://localhost:8000/stora/talk/3158418655 \
+curl -X POST http://localhost:8000/stora/talk/8920501532 \
   -H "Content-Type: application/json"
 
 ```
+
+## WORKS
+
+✅
 
 ---
 

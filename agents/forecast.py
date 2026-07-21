@@ -34,7 +34,7 @@ class Forecast:
         # Set up query parameters targeting specific locations
         results = client.search({
             "engine": "google_events",
-            "q": f"Events in {self.store.location}", 
+            "q": f"Events in {self.store.city}", 
             "hl": "en",
             "gl": "us"
         })

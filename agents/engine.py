@@ -44,7 +44,7 @@ class Engine:
             return 
         m = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"<<<TEXT>>>\n{text}\n<<<TEXT>>>"}
+            {"role": "user", "content": f"<<<DATA>>>\n{text}\n<<<DATA>>>"}
         ]
         
         
